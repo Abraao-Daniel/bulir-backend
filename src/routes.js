@@ -13,7 +13,7 @@ router.post('/login', UserController.login);
 router.delete('/users', UserController.remove);
 
 // Protected routes
-router.use(auth);
+ router.use(auth);
 
 // Services
 router.post('/services', ServiceController.create);

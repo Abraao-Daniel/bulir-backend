@@ -5,42 +5,43 @@ import sequelize from '../config/database.js';
 
 class BookingController {
   async create(req, res) {
-    const t = await sequelize.transaction();
+     const t = await sequelize.transaction();
 
     try {
       const { serviceId, bookingDate } = req.body;
       const clientId = req.body.id;
 
-      if (req.user.userType !== 'client') {
-        return res.status(403).json({ error: 'Only clients can make bookings' });
-      }
+      //  if (req.user.userType !== 'client') {
+      //    return res.status(403).json({ error: 'Only clients can make bookings' });
+      //  }
 
-      const service = await Service.findByPk(serviceId, { include: ['provider'] });
-      if (!service) {
-        return res.status(404).json({ error: 'Service not found' });
-      }
+       const service = await Service.findByPk(serviceId, { include: ['provider'] });
+       if (!service) {
+         return res.status(404).json({ error: 'Service not found' });
+       }
 
-      const client = await User.findByPk(clientId);
-      if (client.balance < service.price) {
-        return res.status(400).json({ error: 'Insufficient balance' });
-      }
+       const client = await User.findByPk(clientId);
+      //  if (client.balance < service.price) {
+      //    return res.status(400).json({ error: 'Insufficient balance' });
+      //  }
 
-      // Update balances
-      await client.decrement('balance', { by: service.price, transaction: t });
-      await service.provider.increment('balance', { by: service.price, transaction: t });
+       // Update balances
+       await client.decrement('balance', { by: service.price, transaction: t });
+       await service.provider.increment('balance', { by: service.price, transaction: t });
 
       const booking = await Booking.create({
         clientId,
         serviceId,
         bookingDate,
         amount: service.price,
+        name: service.name,
         status: 'confirmed'
-      }, { transaction: t });
+      }, { transaction: 0 });
 
-      await t.commit();
+      // await t.commit();
       return res.status(201).json(booking);
     } catch (error) {
-      await t.rollback();
+      // await t.rollback();
       return res.status(500).json({ error: error.message });
     }
   }
